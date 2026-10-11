@@ -1,0 +1,58 @@
+<a routerLink="/roles" class="text-sm text-indigo-700 hover:underline">← All roles</a>
+
+<h1 class="mt-2 text-2xl font-semibold">{{ isNew() ? 'New role' : (role()?.name ?? 'Role') }}</h1>
+@if (readOnly() && !isNew()) {
+  <p class="mt-1 text-sm text-slate-500">
+    {{ role()?.isSystem ? 'System roles always have every permission and cannot be changed.' : 'You can view this role but not change it.' }}
+  </p>
+}
+
+<form class="mt-6 space-y-6" [formGroup]="form" (ngSubmit)="save()">
+  <section class="card grid gap-4 md:grid-cols-2">
+    <div>
+      <label class="label" for="name">Name</label>
+      <input id="name" class="input" formControlName="name" />
+    </div>
+    <div>
+      <label class="label" for="description">Description</label>
+      <input id="description" class="input" formControlName="description" />
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="font-semibold">Permissions</h2>
+    <p class="mt-1 text-sm text-slate-500">You can only grant permissions that you have yourself.</p>
+
+    <div class="mt-4 grid gap-6 md:grid-cols-3">
+      @for (group of catalogue(); track group.group) {
+        <fieldset>
+          <legend class="mb-2 text-sm font-semibold text-slate-700">{{ group.group }}</legend>
+          @for (permission of group.permissions; track permission.code) {
+            <label class="flex items-start gap-2 py-1 text-sm">
+              <input type="checkbox" class="mt-0.5 size-4 rounded border-slate-300 text-indigo-600"
+                     [checked]="selected().has(permission.code)" [disabled]="readOnly()"
+                     (change)="toggle(permission.code, $any($event.target).checked)" />
+              <span>
+                <code class="font-mono text-xs text-slate-600">{{ permission.code }}</code>
+                <span class="block text-slate-500">{{ permission.description }}</span>
+              </span>
+            </label>
+          }
+        </fieldset>
+      }
+    </div>
+  </section>
+
+  @if (error(); as message) {
+    <p class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ message }}</p>
+  }
+
+  @if (!readOnly()) {
+    <div class="flex justify-between">
+      <button type="submit" class="btn btn-primary" [disabled]="saving()">Save role</button>
+      @if (!isNew()) {
+        <button type="button" class="btn btn-danger" [disabled]="saving()" (click)="remove()">Delete role</button>
+      }
+    </div>
+  }
+</form>

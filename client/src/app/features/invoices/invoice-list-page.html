@@ -1,0 +1,97 @@
+<div class="flex flex-wrap items-end justify-between gap-4">
+  <div>
+    <h1 class="text-2xl font-semibold">Invoices</h1>
+    <p class="mt-1 text-sm text-slate-500">Only invoices of your organization are listed (tenant isolation).</p>
+  </div>
+
+  <button *appHasPermission="[P.Invoices.View, P.Invoices.Export]" type="button" class="btn btn-secondary" (click)="exportCsv()">
+    Export CSV
+  </button>
+</div>
+
+<form *appHasPermission="P.Invoices.Create" class="card mt-6 grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end"
+      [formGroup]="createForm" (ngSubmit)="create()">
+  <div>
+    <label class="label" for="customer">Customer</label>
+    <input id="customer" class="input" formControlName="customerName" placeholder="Customer name" />
+  </div>
+  <div>
+    <label class="label" for="amount">Amount</label>
+    <input id="amount" class="input" type="number" min="0.01" step="0.01" formControlName="amount" />
+  </div>
+  <button type="submit" class="btn btn-primary">New draft</button>
+</form>
+
+<div class="mt-6 flex flex-wrap gap-3">
+  <input class="input max-w-xs" placeholder="Search number or customer" [value]="search()"
+         (input)="search.set($any($event.target).value)" />
+  <select class="input max-w-48" [value]="status()" (change)="status.set($any($event.target).value)">
+    <option value="">All statuses</option>
+    @for (s of statuses; track s) {
+      <option [value]="s">{{ s }}</option>
+    }
+  </select>
+</div>
+
+@if (notice(); as message) {
+  <p class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700" role="status">{{ message }}</p>
+}
+@if (error(); as message) {
+  <p class="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ message }}</p>
+}
+
+<div class="card mt-4 overflow-x-auto p-0">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Number</th>
+        <th class="px-4 py-3">Customer</th>
+        <th class="px-4 py-3 text-right">Amount</th>
+        <th class="px-4 py-3">Status</th>
+        <th class="px-4 py-3">Created by</th>
+        <th class="px-4 py-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (invoice of invoices(); track invoice.id) {
+        <tr>
+          <td class="px-4 py-3 font-medium">{{ invoice.number }}</td>
+          <td class="px-4 py-3">{{ invoice.customerName }}</td>
+          <td class="px-4 py-3 text-right tabular-nums">{{ invoice.amount | currency }}</td>
+          <td class="px-4 py-3">
+            <span class="badge" [class]="statusClass(invoice.status)">{{ invoice.status }}</span>
+            @if (invoice.reviewedByName) {
+              <div class="mt-1 text-xs text-slate-500">by {{ invoice.reviewedByName }}</div>
+            }
+          </td>
+          <td class="px-4 py-3">
+            {{ invoice.createdByName }}
+            <div class="text-xs text-slate-500">{{ invoice.createdAtUtc | date: 'mediumDate' }}</div>
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex justify-end gap-2">
+              @if (invoice.status === 'Draft') {
+                <button *appHasPermission="P.Invoices.Submit" type="button" class="btn btn-secondary" (click)="submit(invoice)">Submit</button>
+                <button *appHasPermission="P.Invoices.Delete" type="button" class="btn btn-secondary" (click)="remove(invoice)">Delete</button>
+              }
+              @if (invoice.status === 'Submitted') {
+                <ng-container *appHasPermission="P.Invoices.Approve">
+                  <button type="button" class="btn btn-success" [disabled]="isOwnInvoice(invoice)"
+                          [title]="isOwnInvoice(invoice) ? 'You created this invoice. Another approver must review it.' : ''"
+                          (click)="approve(invoice)">Approve</button>
+                  <button type="button" class="btn btn-danger" [disabled]="isOwnInvoice(invoice)" (click)="reject(invoice)">Reject</button>
+                </ng-container>
+              }
+            </div>
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="6" class="px-4 py-10 text-center text-slate-500">
+            {{ loading() ? 'Loading…' : 'No invoices found.' }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

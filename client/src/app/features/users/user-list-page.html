@@ -1,0 +1,103 @@
+<h1 class="text-2xl font-semibold">Users</h1>
+<p class="mt-1 text-sm text-slate-500">
+  Assign roles to give people permissions. Changes apply immediately, even for users who are signed in.
+</p>
+
+<form *appHasPermission="P.Users.Manage" class="card mt-6 space-y-4" [formGroup]="createForm" (ngSubmit)="create()">
+  <h2 class="font-semibold">New user</h2>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div>
+      <label class="label" for="fullName">Full name</label>
+      <input id="fullName" class="input" formControlName="fullName" />
+    </div>
+    <div>
+      <label class="label" for="email">Email</label>
+      <input id="email" class="input" type="email" formControlName="email" />
+    </div>
+    <div>
+      <label class="label" for="password">Password</label>
+      <input id="password" class="input" type="password" formControlName="password" autocomplete="new-password" />
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-4">
+    @for (role of roles(); track role.id) {
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" class="size-4 rounded border-slate-300" [checked]="newUserRoleIds().has(role.id)"
+               (change)="toggle('new', role.id, $any($event.target).checked)" />
+        {{ role.name }}
+      </label>
+    }
+  </div>
+  <button type="submit" class="btn btn-primary">Create user</button>
+</form>
+
+@if (notice(); as message) {
+  <p class="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700" role="status">{{ message }}</p>
+}
+@if (error(); as message) {
+  <p class="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ message }}</p>
+}
+
+<div class="card mt-4 overflow-x-auto p-0">
+  <table class="w-full text-left text-sm">
+    <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Name</th>
+        <th class="px-4 py-3">Roles</th>
+        <th class="px-4 py-3">Status</th>
+        <th class="px-4 py-3 text-right">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (user of users(); track user.id) {
+        <tr class="align-top">
+          <td class="px-4 py-3">
+            <div class="font-medium">{{ user.fullName }} @if (isSelf(user)) { <span class="text-xs text-slate-500">(you)</span> }</div>
+            <div class="text-xs text-slate-500">{{ user.email }}</div>
+          </td>
+          <td class="px-4 py-3">
+            @if (editingUserId() === user.id) {
+              <div class="flex flex-col gap-1">
+                @for (role of roles(); track role.id) {
+                  <label class="flex items-center gap-2">
+                    <input type="checkbox" class="size-4 rounded border-slate-300" [checked]="editingRoleIds().has(role.id)"
+                           (change)="toggle('edit', role.id, $any($event.target).checked)" />
+                    {{ role.name }}
+                  </label>
+                }
+              </div>
+            } @else {
+              <div class="flex flex-wrap gap-1">
+                @for (role of user.roles; track role.id) {
+                  <span class="badge bg-indigo-50 text-indigo-700">{{ role.name }}</span>
+                } @empty {
+                  <span class="text-slate-400">None</span>
+                }
+              </div>
+            }
+          </td>
+          <td class="px-4 py-3">
+            <span class="badge" [class]="user.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'">
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <div *appHasPermission="P.Users.Manage" class="flex justify-end gap-2">
+              @if (!isSelf(user)) {
+                @if (editingUserId() === user.id) {
+                  <button type="button" class="btn btn-primary" (click)="saveRoles(user)">Save</button>
+                  <button type="button" class="btn btn-secondary" (click)="editingUserId.set(null)">Cancel</button>
+                } @else {
+                  <button type="button" class="btn btn-secondary" (click)="startEditing(user)">Edit roles</button>
+                  <button type="button" class="btn btn-secondary" (click)="toggleActive(user)">
+                    {{ user.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                }
+              }
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

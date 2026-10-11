@@ -1,0 +1,48 @@
+# Requests for the Visual Studio / VS Code REST client.
+# 1. Run "Sign in" and copy accessToken into @token.
+# 2. Try the other requests with different demo users to see 401, 403 and 404 responses.
+
+@baseUrl = http://localhost:5080
+@token = paste-access-token-here
+
+### Sign in (demo password for every user: Passw0rd!)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "accountant@contoso.test",
+  "password": "Passw0rd!"
+}
+
+### My profile and effective permissions
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
+
+### List invoices (needs invoices.view)
+GET {{baseUrl}}/api/invoices
+Authorization: Bearer {{token}}
+
+### Create a draft invoice (needs invoices.create)
+POST {{baseUrl}}/api/invoices
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "customerName": "Fourth Coffee",
+  "amount": 450.00
+}
+
+### Export (needs invoices.view AND invoices.export)
+GET {{baseUrl}}/api/invoices/export
+Authorization: Bearer {{token}}
+
+### Roles (needs roles.view) - try with admin@contoso.test
+GET {{baseUrl}}/api/roles
+Authorization: Bearer {{token}}
+
+### Permission catalogue (needs roles.view)
+GET {{baseUrl}}/api/permissions
+Authorization: Bearer {{token}}
+
+### No token -> 401
+GET {{baseUrl}}/api/invoices

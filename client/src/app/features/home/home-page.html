@@ -1,0 +1,38 @@
+@if (auth.user(); as user) {
+  <h1 class="text-2xl font-semibold">Welcome, {{ user.fullName }}</h1>
+  <p class="mt-1 text-slate-500">
+    You are signed in to <strong>{{ user.tenantName }}</strong>. Your roles decide which permissions you have.
+  </p>
+
+  <div class="mt-6 grid gap-6 md:grid-cols-2">
+    <section class="card">
+      <h2 class="font-semibold">Your roles</h2>
+      <p class="mt-1 text-sm text-slate-500">Assigned by an administrator.</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        @for (role of user.roles; track role) {
+          <span class="badge bg-indigo-50 text-indigo-700">{{ role }}</span>
+        } @empty {
+          <span class="text-sm text-slate-500">No roles assigned.</span>
+        }
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="font-semibold">Your effective permissions</h2>
+      <p class="mt-1 text-sm text-slate-500">The union of the permissions of all your roles.</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        @for (permission of user.permissions; track permission) {
+          <code class="badge bg-emerald-50 font-mono text-emerald-700">{{ permission }}</code>
+        } @empty {
+          <span class="text-sm text-slate-500">No permissions.</span>
+        }
+      </div>
+    </section>
+  </div>
+
+  <div class="mt-6 flex flex-wrap gap-3">
+    <a *appHasPermission="P.Invoices.View" routerLink="/invoices" class="btn btn-primary">Open invoices</a>
+    <a *appHasPermission="P.Users.View" routerLink="/users" class="btn btn-secondary">Manage users</a>
+    <a *appHasPermission="P.Roles.View" routerLink="/roles" class="btn btn-secondary">Manage roles</a>
+  </div>
+}

@@ -1,0 +1,49 @@
+<main class="flex min-h-screen items-center justify-center px-4 py-12">
+  <div class="grid w-full max-w-4xl gap-6 md:grid-cols-2">
+    <section class="card">
+      <h1 class="text-2xl font-semibold">Sign in</h1>
+      <p class="mt-1 text-sm text-slate-500">Authorization &amp; RBAC reference application</p>
+
+      <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="submit()">
+        <div>
+          <label class="label" for="email">Email</label>
+          <input id="email" class="input" type="email" formControlName="email" autocomplete="username" />
+        </div>
+        <div>
+          <label class="label" for="password">Password</label>
+          <input id="password" class="input" type="password" formControlName="password" autocomplete="current-password" />
+        </div>
+
+        @if (error(); as message) {
+          <p class="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700" role="alert">{{ message }}</p>
+        }
+
+        <button class="btn btn-primary w-full" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2 class="text-lg font-semibold">Demo accounts</h2>
+      <p class="mt-1 text-sm text-slate-500">
+        Every account uses the password <code class="rounded bg-slate-100 px-1">{{ demoPassword }}</code>.
+        Sign in as different users to see how roles change what you can do.
+      </p>
+      <ul class="mt-4 divide-y divide-slate-100">
+        @for (account of demoAccounts; track account.email) {
+          <li>
+            <button
+              type="button"
+              class="flex w-full items-center justify-between rounded-lg px-2 py-2.5 text-left hover:bg-slate-50"
+              (click)="useDemoAccount(account)"
+            >
+              <span class="text-sm font-medium">{{ account.email }}</span>
+              <span class="badge bg-indigo-50 text-indigo-700">{{ account.roles }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    </section>
+  </div>
+</main>
